@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Social Media Contest</title>
+<style>
+  :root{
+    --bg:#0b1020;
+    --panel:#121a2f;
+    --panel2:#18223b;
+    --text:#f6f8ff;
+    --muted:#aeb8d0;
+    --border:rgba(255,255,255,.12);
+    --g1:#4f8cff;
+    --g2:#39c17b;
+    --g3:#b56cff;
+    --danger:#ff5d6c;
+    --warning:#ffb648;
+    --success:#39d98a;
+    --shadow:0 18px 50px rgba(0,0,0,.28);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;min-height:100%;font-family:Tahoma,Arial,sans-serif;background:linear-gradient(135deg,#080c18,#101a31 55%,#0a1020);color:var(--text)}
+  button{font:inherit}
+  .screen{display:none;min-height:100vh}
+  .screen.active{display:flex}
+  #startScreen{align-items:center;justify-content:center;padding:28px}
+  .start-card{width:min(1100px,100%);background:rgba(18,26,47,.92);border:1px solid var(--border);border-radius:28px;padding:34px;box-shadow:var(--shadow);text-align:center;backdrop-filter:blur(12px)}
+  .brand{font-size:clamp(26px,4vw,48px);font-weight:900;margin-bottom:8px}
+  .subtitle{color:var(--muted);font-size:clamp(14px,1.6vw,18px);margin-bottom:28px}
+  .groups-preview{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0}
+  .group-card{border:1px solid var(--border);border-radius:20px;padding:22px;text-align:center;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+  .group-card .badge{width:62px;height:62px;margin:auto auto 12px;display:grid;place-items:center;border-radius:18px;font-size:26px;font-weight:900;color:#fff}
+  .g1 .badge{background:var(--g1)} .g2 .badge{background:var(--g2)} .g3 .badge{background:var(--g3)}
+  .group-card h3{margin:6px 0;font-size:21px}
+  .group-card p{color:var(--muted);margin:6px 0;line-height:1.65;font-size:14px}
+  .settings{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:18px 0 24px;color:var(--muted)}
+  .settings select{background:#0d1428;color:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 14px}
+  .primary-btn,.secondary-btn{border:0;border-radius:16px;padding:15px 28px;cursor:pointer;transition:.2s;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+  .primary-btn{background:linear-gradient(135deg,#5b8cff,#7c63ff);color:#fff;font-weight:900;font-size:20px}
+  .primary-btn:hover{transform:translateY(-2px);filter:brightness(1.06)}
+  .secondary-btn{background:#27324d;color:#fff}
+  .note{margin-top:18px;color:#95a1bf;font-size:13px}
+
+  #quizScreen{flex-direction:column;padding:10px;gap:10px}
+  .topbar{height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(18,26,47,.92);border:1px solid var(--border);border-radius:18px;padding:10px 14px;position:sticky;top:10px;z-index:5;box-shadow:var(--shadow)}
+  .topbar-title{font-weight:900}
+  .global-actions{display:flex;gap:8px}
+  .mini-btn{border:1px solid var(--border);background:#1a2440;color:#fff;border-radius:12px;padding:9px 12px;cursor:pointer}
+  .board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;flex:1;min-height:calc(100vh - 94px)}
+  .team-panel{min-width:0;background:var(--panel);border:1px solid var(--border);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+  .team-header{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .team-header.g1{background:linear-gradient(135deg,rgba(79,140,255,.22),rgba(79,140,255,.04))}
+  .team-header.g2{background:linear-gradient(135deg,rgba(57,193,123,.22),rgba(57,193,123,.04))}
+  .team-header.g3{background:linear-gradient(135deg,rgba(181,108,255,.22),rgba(181,108,255,.04))}
+  .team-name{font-size:21px;font-weight:900}
+  .team-score{font-size:17px;font-weight:900}
+  .live-stats{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;font-size:12px;margin-top:5px}
+  .live-stat{padding:4px 8px;border-radius:999px;font-weight:800;border:1px solid var(--border);background:rgba(0,0,0,.14)}
+  .live-stat.correct-stat{color:var(--success)}
+  .live-stat.wrong-stat{color:var(--danger)}
+  .live-stat.pending-stat{color:var(--warning)}
+  .team-body{padding:16px;display:flex;flex-direction:column;gap:12px;flex:1}
+  .progress-line{height:8px;background:#0b1121;border-radius:99px;overflow:hidden}
+  .progress-fill{height:100%;width:0;border-radius:99px;transition:width .25s}
+  .g1fill{background:var(--g1)} .g2fill{background:var(--g2)} .g3fill{background:var(--g3)}
+  .meta-row{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:13px}
+  .timer-box{border:1px solid var(--border);background:#0d1529;border-radius:18px;padding:12px;text-align:center}
+  .timer-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .timer{font-size:34px;font-weight:900;letter-spacing:1px}
+  .timer.warning{color:var(--warning)}
+  .timer.danger{color:var(--danger)}
+  .question-card{background:var(--panel2);border:1px solid var(--border);border-radius:18px;padding:16px;flex:1;overflow:auto}
+  .question-type{display:inline-block;color:#cbd4ed;background:#27324d;border-radius:999px;padding:5px 10px;font-size:12px;margin-bottom:10px}
+  .question-text{font-size:clamp(15px,1.45vw,20px);font-weight:800;line-height:1.6;margin-bottom:15px;direction:ltr;text-align:left}
+  .options{display:grid;gap:9px;direction:ltr}
+  .option{width:100%;text-align:left;border:1px solid var(--border);background:#10182d;color:#fff;padding:12px;border-radius:13px;cursor:pointer;transition:.15s;line-height:1.45}
+  .option:hover{background:#1e2a48;transform:translateY(-1px)}
+  .option:disabled{cursor:not-allowed;opacity:.92}
+  .option.correct-answer{background:rgba(57,217,138,.18);border-color:var(--success);color:#fff}
+  .option.wrong-answer{background:rgba(255,93,108,.18);border-color:var(--danger);color:#fff}
+  .option.correct-answer .letter{background:var(--success);color:#07120c}
+  .option.wrong-answer .letter{background:var(--danger);color:#21080c}
+  .answer-feedback{padding:10px 12px;border-radius:14px;font-weight:900;text-align:center;border:1px solid var(--border);line-height:1.5}
+  .answer-feedback.correct-feedback{background:rgba(57,217,138,.12);color:var(--success);border-color:rgba(57,217,138,.35)}
+  .answer-feedback.wrong-feedback{background:rgba(255,93,108,.12);color:var(--danger);border-color:rgba(255,93,108,.35)}
+  .answer-feedback.timeout-feedback{background:rgba(255,182,72,.12);color:var(--warning);border-color:rgba(255,182,72,.35)}
+  .option .letter{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;background:#27324d;margin-right:8px;font-weight:900}
+  .footer-hint{font-size:12px;color:#8f9bb8;text-align:center}
+  .team-done{margin:auto;text-align:center;color:var(--muted);padding:24px}
+  .team-done strong{display:block;color:#fff;font-size:24px;margin-bottom:8px}
+
+  #resultScreen{padding:22px;align-items:flex-start;justify-content:center}
+  .results-wrap{width:min(1250px,100%)}
+  .results-head{background:rgba(18,26,47,.94);border:1px solid var(--border);border-radius:24px;padding:24px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .results-head h1{margin:0 0 7px;font-size:32px}
+  .results-head p{margin:0;color:var(--muted)}
+  .results-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .result-card{background:rgba(18,26,47,.94);border:1px solid var(--border);border-radius:22px;padding:20px;box-shadow:var(--shadow)}
+  .result-card.g1{border-top:5px solid var(--g1)}
+  .result-card.g2{border-top:5px solid var(--g2)}
+  .result-card.g3{border-top:5px solid var(--g3)}
+  .result-card h2{margin:0 0 14px}
+  .stat-main{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+  .score-big{font-size:46px;font-weight:900}
+  .percent{color:var(--muted)}
+  .stat-list{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}
+  .stat{background:#0e162a;border:1px solid var(--border);border-radius:13px;padding:10px}
+  .stat small{display:block;color:var(--muted);margin-bottom:4px}
+  .stat strong{font-size:17px}
+  .report-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  .report-table th,.report-table td{border-bottom:1px solid var(--border);padding:8px 4px;text-align:right;vertical-align:top}
+  .correct{color:var(--success);font-weight:800}
+  .wrong{color:var(--danger);font-weight:800}
+  .unanswered{color:var(--warning);font-weight:800}
+  .result-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .print-btn{border:1px solid var(--border);background:#202c49;color:#fff;padding:10px 14px;border-radius:12px;cursor:pointer}
+  .restart{display:block;margin:22px auto 0}
+
+  @media (max-width:900px){
+    .groups-preview,.results-grid{grid-template-columns:1fr}
+    .board{grid-template-columns:1fr;min-height:0}
+    .team-panel{min-height:650px}
+    .topbar{position:relative;top:0}
+  }
+  @media (max-width:560px){
+    #startScreen{padding:12px}
+    .start-card{padding:22px 16px}
+    .team-panel{min-height:600px}
+    .timer{font-size:30px}
+  }
+  @media print{
+    body{background:#fff;color:#000}
+    #startScreen,#quizScreen{display:none!important}
+    #resultScreen{display:flex!important;padding:0}
+    .results-head,.result-card{box-shadow:none;background:#fff;border:1px solid #ccc}
+    .print-btn,.restart{display:none}
+    .result-card{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<section id="startScreen" class="screen active">
+  <div class="start-card">
+    <div class="brand">🏆 Social Media Contest</div>
+    <div class="subtitle">Between Benefits and Harms — An Islamic Perspective | Grade 11</div>
+
+    <div class="groups-preview">
+      <div class="group-card g1">
+        <div class="badge">1</div>
+        <h3>Group One</h3>
+        <p>Fundamentals and Online Conduct</p>
+        <p>5 Questions</p>
+      </div>
+      <div class="group-card g2">
+        <div class="badge">2</div>
+        <h3>Group Two</h3>
+        <p>Social Impact and Responsibility</p>
+        <p>5 Questions</p>
+      </div>
+      <div class="group-card g3">
+        <div class="badge">3</div>
+        <h3>Group Three</h3>
+        <p>Character and Modesty</p>
+        <p>5 Questions</p>
+      </div>
+    </div>
+
+    <div class="settings">
+      <label for="timeSelect">⏱️ Time for each question:</label>
+      <select id="timeSelect">
+        <option value="15">15 second</option>
+        <option value="20">20 second</option>
+        <option value="30" selected>30 second</option>
+        <option value="45">45 second</option>
+        <option value="60">60 second</option>
+      </select>
+    </div>
+
+    <button class="primary-btn" onclick="startQuiz()">▶ The competition begins for the three groups </button>
+    <div class="note">The three groups start at the same time, and each group has an independent timer for each question.</div>
+  </div>
+</section>
+
+<section id="quizScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-title">مسابقة مباشرة — المجموعات الثلاث</div>
+    <div class="global-actions">
+      <button class="mini-btn" onclick="toggleFullscreen()">⛶ ملء الشاشة</button>
+      <button class="mini-btn" onclick="confirmRestart()">↻ إعادة</button>
+    </div>
+  </div>
+  <div id="board" class="board"></div>
+</section>
+
+<section id="resultScreen" class="screen">
+  <div class="results-wrap">
+    <div class="results-head">
+      <h1>📊 تقرير المسابقة</h1>
+      <p id="resultSummary"></p>
+    </div>
+    <div id="resultsGrid" class="results-grid"></div>
+    <button class="primary-btn restart" onclick="resetQuiz()">↻ بدء مسابقة جديدة</button>
+  </div>
+</section>
+
+<script>
+const DATA = [
+  {
+    id: 1,
+    title: "Group 1: Fundamentals and Online Conduct",
+    questions: [
+      {type:"Vocab", q:"What is the correct meaning of 'connection' on social media?", options:[
+        "Hiding information","Linking with other people","Deleting an account","Ignoring messages","Blocking websites"
+      ], answer:1},
+      {type:"Grammar 1", q:'Choose the correct verb: "Good Muslims _____ truthful information online."', options:[
+        "post","posts","posted","posting","was posting"
+      ], answer:0},
+      {type:"Grammar 2", q:'Choose the correct preposition: "We share Islamic reminders _____ Instagram."', options:[
+        "in","on","at","with","by"
+      ], answer:1},
+      {type:"General 1", q:"Is using social media to learn good Islamic knowledge allowed in Islam?", options:[
+        "Yes, it is allowed and encouraged for seeking beneficial knowledge",
+        "No, technology is completely forbidden in religion",
+        "No, social media can never be used for learning",
+        "Only if you are over 50 years old",
+        "Yes, reading printed books is the only allowed method"
+      ], answer:0},
+      {type:"General 2", q:"Should we spread bad rumors about people on social media?", options:[
+        "Yes, if they are funny",
+        "Yes, to gain more followers",
+        "No, Islam strictly forbids backbiting and spreading rumors",
+        "No, if everyone else is doing it",
+        "Yes, if we don't like the person"
+      ], answer:2}
+    ]
+  },
+  {
+    id: 2,
+    title: "Group 2: Social Impact and Responsibility",
+    questions: [
+      {type:"Vocab 1", q:"What is the correct meaning of 'share' on social media?", options:[
+        "Keep secret","Send or publish content to other people","Block a user","Turn off the internet","Save to private drafts"
+      ], answer:1},
+      {type:"Vocab 2", q:"What is the correct meaning of 'harm' in Islamic teachings?", options:[
+        "Hurt or physical/moral damage","Helpful advice","Good deeds","Making new friends","Reading beneficial books"
+      ], answer:0},
+      {type:"Grammar", q:"Choose the correct modal verb: \"We _____ respect other users online.\"", options:[
+        "should","should not","must not","haven't","doesn't"
+      ], answer:0},
+      {type:"General 1", q:"Is wasting hours of time on social media good in Islam?", options:[
+        "Yes, wasting time is praised",
+        "No, Islam encourages us to value and manage our time wisely",
+        "Yes, as long as we are entertained",
+        "No, because time has no value",
+        "Yes, it is recommended for students"
+      ], answer:1},
+      {type:"General 2", q:"Can social media help us keep in touch with family members?", options:[
+        "Yes, it can be a good tool for maintaining family ties (Silat al-Rahim)",
+        "No, family ties cannot be maintained online",
+        "No, it is strictly banned to talk to family online",
+        "Only if they live in the same house",
+        "Yes, social media is only for playing games"
+      ], answer:0}
+    ]
+  },
+  {
+    id: 3,
+    title: "Group 3: Character and Modesty",
+    questions: [
+      {type:"Vocab", q:"What is the correct meaning of 'benefit'?", options:[
+        "Good or helpful outcome","Bad behavior","Loss of time","Harmful activity","Dangerous situation"
+      ], answer:0},
+      {type:"Grammar", q:'Choose the correct pronoun: "Ahmad is careful. _____ uses social media wisely."', options:[
+        "He","She","They","Him","His"
+      ], answer:0},
+      {type:"General 1", q:"Does Islam teach us to be polite and kind online?", options:[
+        "Yes, good manners and kindness apply everywhere, including online",
+        "Yes, online manners do not matter at all",
+        "No, kindness is only required in person",
+        "Only when talking to teachers",
+        "No, rudeness is allowed on social media"
+      ], answer:0},
+      {type:"General 2", q:"Is protecting our personal privacy important online?", options:[
+        "Yes, protecting modesty (Haya) and privacy is very important in Islam",
+        "No, sharing everything publicly is required",
+        "No, privacy has no importance in Islam",
+        "Only for famous people",
+        "No, we should post all personal details online"
+      ], answer:0},
+      {type:"General 3", q:"Can we use social media to spread useful knowledge and good deeds?", options:[
+        "Yes, spreading beneficial knowledge is a continuous charity (Sadaqah Jariyah)",
+        "No, good deeds cannot be shared online",
+        "No, social media can only be used for harm",
+        "Only if we get paid for it",
+        "No, it is forbidden to mention good deeds online"
+      ], answer:0}
+    ]
+  }
+];
+
+const LETTERS = ["A","B","C","D","E"];
+let questionTime = 30;
+let states = [];
+let quizStartedAt = null;
+let finishedCount = 0;
+let ticking = null;
+
+function makeState(teamIndex){
+  return {
+    teamIndex,
+    current: 0,
+    score: 0,
+    answered: Array(DATA[teamIndex].questions.length).fill(null),
+    startedAt: Date.now(),
+    questionStartedAt: Date.now(),
+    remaining: questionTime,
+    done: false,
+    totalSeconds: 0,
+    correctCount: 0,
+    wrongCount: 0,
+    feedback: null
+  };
+}
+
+function startQuiz(){
+  questionTime = Number(document.getElementById("timeSelect").value);
+  states = [makeState(0),makeState(1),makeState(2)];
+  finishedCount = 0;
+  quizStartedAt = Date.now();
+  document.getElementById("startScreen").classList.remove("active");
+  document.getElementById("resultScreen").classList.remove("active");
+  document.getElementById("quizScreen").classList.add("active");
+  renderBoard();
+  stopTicking();
+  ticking = setInterval(tick, 250);
+}
+
+function renderBoard(){
+  const board = document.getElementById("board");
+  board.innerHTML = states.map((s,i)=>renderTeamPanel(i)).join("");
+}
+
+function renderTeamPanel(i){
+  const s = states[i], data = DATA[i], q = data.questions[s.current];
+  const colors = ["g1","g2","g3"];
+  const fills = ["g1fill","g2fill","g3fill"];
+  const headerClass = colors[i];
+  const percent = Math.round((s.current / data.questions.length) * 100);
+  if(s.done){
+    return `
+      <article class="team-panel">
+        <header class="team-header ${headerClass}">
+          <div>
+            <div class="team-name">المجموعة ${i+1}</div>
+            <div class="live-stats">
+              <span class="live-stat correct-stat">✅ صحيح: ${s.correctCount}</span>
+              <span class="live-stat wrong-stat">❌ خطأ: ${s.wrongCount}</span>
+            </div>
+          </div>
+          <div class="team-score">${s.score}/${data.questions.length}</div>
+        </header>
+        <div class="team-body">
+          <div class="team-done">
+            <strong>✅ انتهت المجموعة</strong>
+            <div>تمت الإجابة عن جميع الQuestions.</div>
+            <div style="margin-top:10px">النتيجة: <b style="color:#fff">${s.score} من ${data.questions.length}</b></div>
+          </div>
+        </div>
+      </article>`;
+  }
+  return `
+    <article class="team-panel">
+      <header class="team-header ${headerClass}">
+        <div>
+          <div class="team-name">المجموعة ${i+1}</div>
+          <div style="font-size:12px;color:var(--muted)">${escapeHtml(data.title.split(": ")[1] || "")}</div>
+          <div class="live-stats">
+            <span class="live-stat correct-stat">✅ صحيح: ${s.correctCount}</span>
+            <span class="live-stat wrong-stat">❌ خطأ: ${s.wrongCount}</span>
+          </div>
+        </div>
+        <div class="team-score">النقاط: ${s.score}</div>
+      </header>
+      <div class="team-body">
+        <div class="meta-row"><span>السؤال ${s.current+1} من ${data.questions.length}</span><span>${percent}%</span></div>
+        <div class="progress-line"><div class="progress-fill ${fills[i]}" style="width:${percent}%"></div></div>
+        <div class="timer-box">
+          <div class="timer-label">الوقت المتبقي لهذا السؤال</div>
+          <div id="timer-${i}" class="timer">${formatTime(s.remaining)}</div>
+        </div>
+        <div class="question-card">
+          <div class="question-type">${escapeHtml(q.type)}</div>
+          <div class="question-text">${escapeHtml(q.q)}</div>
+          <div class="options">
+            ${q.options.map((opt,oi)=>{
+              const selected = s.feedback ? s.feedback.selected : null;
+              const cls = s.feedback ? (oi === q.answer ? "correct-answer" : (oi === selected && selected !== q.answer ? "wrong-answer" : "")) : "";
+              return `<button class="option ${cls}" ${s.feedback ? "disabled" : ""} onclick="chooseAnswer(${i},${oi})">
+                <span class="letter">${LETTERS[oi]}</span>${escapeHtml(opt)}
+              </button>`;
+            }).join("")}
+          </div>
+          ${s.feedback ? `<div class="answer-feedback ${s.feedback.kind}-feedback">${escapeHtml(s.feedback.message)}</div>` : ""}
+        </div>
+        <div class="footer-hint">${s.feedback ? "سيظهر السؤال التالي بعد لحظات…" : "اختر إجابة واحدة؛ سيتم إظهار التصحيح فورًا."}</div>
+      </div>
+    </article>`;
+}
+
+function chooseAnswer(teamIndex, optionIndex){
+  const s = states[teamIndex];
+  if(s.done || s.feedback || s.answered[s.current] !== null) return;
+  const q = DATA[teamIndex].questions[s.current];
+  const elapsed = Math.max(0, Math.round((Date.now() - s.questionStartedAt)/1000));
+  s.totalSeconds += Math.min(questionTime, elapsed);
+  s.answered[s.current] = optionIndex;
+  const isCorrect = optionIndex === q.answer;
+  if(isCorrect){
+    s.score++;
+    s.correctCount++;
+    s.feedback = {selected: optionIndex, kind: "correct", message: "✅ إجابة صحيحة! +1 نقطة"};
+  }else{
+    s.wrongCount++;
+    s.feedback = {selected: optionIndex, kind: "wrong", message: `❌ إجابة خاطئة — الإجابة الصحيحة: ${LETTERS[q.answer]}`};
+  }
+  renderBoard();
+  setTimeout(()=>{
+    if(states[teamIndex] === s && !s.done && s.feedback) advance(teamIndex);
+  }, 1400);
+}
+
+function timeoutQuestion(teamIndex){
+  const s = states[teamIndex];
+  if(s.done || s.feedback || s.answered[s.current] !== null) return;
+  const q = DATA[teamIndex].questions[s.current];
+  s.totalSeconds += questionTime;
+  s.answered[s.current] = -1;
+  s.feedback = {selected: null, kind: "timeout", message: `⏱️ انتهى الوقت — الإجابة الصحيحة: ${LETTERS[q.answer]}`};
+  renderBoard();
+  setTimeout(()=>{
+    if(states[teamIndex] === s && !s.done && s.feedback) advance(teamIndex);
+  }, 1400);
+}
+
+function advance(teamIndex){
+  const s = states[teamIndex];
+  s.feedback = null;
+  s.current++;
+  if(s.current >= DATA[teamIndex].questions.length){
+    s.done = true;
+    finishedCount++;
+    if(finishedCount === 3){
+      stopTicking();
+      setTimeout(showResults, 350);
+      return;
+    }
+  } else {
+    s.remaining = questionTime;
+    s.questionStartedAt = Date.now();
+  }
+  renderBoard();
+}
+
+function tick(){
+  let needsRender = false;
+  states.forEach((s,i)=>{
+    if(s.done || s.feedback) return;
+    const elapsed = Math.floor((Date.now() - s.questionStartedAt)/1000);
+    const remaining = Math.max(0, questionTime - elapsed);
+    if(remaining !== s.remaining){
+      s.remaining = remaining;
+      const el = document.getElementById(`timer-${i}`);
+      if(el){
+        el.textContent = formatTime(remaining);
+        el.classList.toggle("warning", remaining <= Math.ceil(questionTime*.33) && remaining > Math.ceil(questionTime*.15));
+        el.classList.toggle("danger", remaining <= Math.ceil(questionTime*.15));
+      } else needsRender = true;
+    }
+    if(remaining <= 0){
+      timeoutQuestion(i);
+      needsRender = false;
+    }
+  });
+  if(needsRender) renderBoard();
+}
+
+function showResults(){
+  document.getElementById("quizScreen").classList.remove("active");
+  document.getElementById("resultScreen").classList.add("active");
+  const overall = states.reduce((a,s)=>a+s.score,0);
+  const max = DATA.reduce((a,d)=>a+d.questions.length,0);
+  document.getElementById("resultSummary").textContent =
+    `انتهت المسابقة. مجموع الإجابات الصحيحة: ${overall} من ${max}.`;
+
+  document.getElementById("resultsGrid").innerHTML = states.map((s,i)=>resultCard(i,s)).join("");
+}
+
+function resultCard(i,s){
+  const data = DATA[i];
+  const correct = s.score;
+  const unanswered = s.answered.filter(x=>x===-1).length;
+  const answered = data.questions.length - unanswered;
+  const wrong = answered - correct;
+  const pct = Math.round((correct/data.questions.length)*100);
+  const avg = (s.totalSeconds/data.questions.length).toFixed(1);
+  const rows = data.questions.map((q,qi)=>{
+    const a=s.answered[qi];
+    const status = a===-1 ? '<span class="unanswered">بدون إجابة</span>' :
+                   a===q.answer ? '<span class="correct">صحيح</span>' :
+                   '<span class="wrong">خطأ</span>';
+    const given = a===-1 ? "—" : `${LETTERS[a]}) ${q.options[a]}`;
+    const right = `${LETTERS[q.answer]}) ${q.options[q.answer]}`;
+    return `<tr>
+      <td>${qi+1}</td>
+      <td>${escapeHtml(shorten(q.q,85))}</td>
+      <td>${status}</td>
+      <td style="direction:ltr;text-align:left">${escapeHtml(given)}</td>
+      <td style="direction:ltr;text-align:left">${escapeHtml(right)}</td>
+    </tr>`;
+  }).join("");
+
+  return `
+    <article class="result-card ${["g1","g2","g3"][i]}">
+      <h2>المجموعة ${i+1}</h2>
+      <div class="stat-main">
+        <div class="score-big">${correct}/${data.questions.length}</div>
+        <div class="percent">${pct}%</div>
+      </div>
+      <div class="stat-list">
+        <div class="stat"><small>إجابات صحيحة</small><strong>${correct}</strong></div>
+        <div class="stat"><small>إجابات خاطئة</small><strong>${wrong}</strong></div>
+        <div class="stat"><small>بدون إجابة</small><strong>${unanswered}</strong></div>
+        <div class="stat"><small>متوسط الزمن/سؤال</small><strong>${avg} ث</strong></div>
+      </div>
+      <div style="color:var(--muted);font-size:13px;line-height:1.6">${escapeHtml(data.title)}</div>
+      <details style="margin-top:12px">
+        <summary style="cursor:pointer;font-weight:800">عرض تفاصيل الإجابات</summary>
+        <table class="report-table">
+          <thead><tr><th>#</th><th>السؤال</th><th>النتيجة</th><th>إجابة المجموعة</th><th>الإجابة الصحيحة</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </details>
+      <div class="result-actions">
+        <button class="print-btn" onclick="printGroup(${i})">🖨 طباعة تقرير المجموعة</button>
+      </div>
+    </article>`;
+}
+
+function printGroup(i){
+  const s = states[i], data=DATA[i];
+  const pct = Math.round((s.score/data.questions.length)*100);
+  const rows = data.questions.map((q,qi)=>{
+    const a=s.answered[qi];
+    const result = a===-1 ? "بدون إجابة" : a===q.answer ? "صحيح" : "خطأ";
+    const given = a===-1 ? "—" : `${LETTERS[a]}) ${q.options[a]}`;
+    const right = `${LETTERS[q.answer]}) ${q.options[q.answer]}`;
+    return `<tr><td>${qi+1}</td><td>${escapeHtml(q.q)}</td><td>${result}</td><td>${escapeHtml(given)}</td><td>${escapeHtml(right)}</td></tr>`;
+  }).join("");
+  const w=window.open("","_blank");
+  w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>تقرير المجموعة ${i+1}</title>
+  <style>
+  body{font-family:Tahoma,Arial,sans-serif;padding:28px;color:#111}h1{margin:0 0 5px}p{color:#555}
+  .score{font-size:28px;font-weight:900;margin:18px 0}.box{display:inline-block;border:1px solid #ddd;padding:10px 14px;border-radius:10px;margin:3px}
+  table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px}th,td{border:1px solid #ccc;padding:8px;text-align:right;vertical-align:top}
+  </style></head><body>
+  <h1>تقرير المجموعة ${i+1}</h1><p>${escapeHtml(data.title)}</p>
+  <div class="score">النتيجة: ${s.score}/${data.questions.length} (${pct}%)</div>
+  <div><span class="box">صحيح: ${s.score}</span><span class="box">خطأ: ${s.answered.filter(x=>x!==-1).length-s.score}</span><span class="box">بدون إجابة: ${s.answered.filter(x=>x===-1).length}</span></div>
+  <table><thead><tr><th>#</th><th>السؤال</th><th>النتيجة</th><th>إجابة المجموعة</th><th>الإجابة الصحيحة</th></tr></thead><tbody>${rows}</tbody></table>
+  </body></html>`);
+  w.document.close(); w.focus(); setTimeout(()=>w.print(),350);
+}
+
+function confirmRestart(){
+  if(confirm("سيتم إنهاء الجولة الحالية والعودة إلى شاشة البداية. هل تريد المتابعة؟")) resetQuiz();
+}
+
+function resetQuiz(){
+  stopTicking();
+  states=[];
+  document.getElementById("quizScreen").classList.remove("active");
+  document.getElementById("resultScreen").classList.remove("active");
+  document.getElementById("startScreen").classList.add("active");
+}
+
+function stopTicking(){
+  if(ticking){clearInterval(ticking);ticking=null;}
+}
+
+async function toggleFullscreen(){
+  try{
+    if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
+    else await document.exitFullscreen();
+  }catch(e){}
+}
+
+function formatTime(seconds){
+  return `${String(seconds).padStart(2,"0")} ث`;
+}
+function shorten(text,n){return text.length>n ? text.slice(0,n-1)+"…" : text;}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+</script>
+</body>
+</html>
